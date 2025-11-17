@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Main ticket body with golden gradient -->
+    <item android:left="10dp" android:right="10dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#FFD700"
+                android:endColor="#FFA500"
+                android:angle="45"/>
+            <corners android:radius="8dp"/>
+            <stroke android:width="1dp" android:color="#D4AF37"/>
+        </shape>
+    </item>
+
+    <!-- Left perforated edge -->
+    <item android:gravity="left|center_vertical" android:left="-5dp">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="2dp"
+                android:color="#B8860B"
+                android:dashWidth="3dp"
+                android:dashGap="2dp"/>
+        </shape>
+    </item>
+
+    <!-- Right perforated edge -->
+    <item android:gravity="right|center_vertical" android:right="-5dp">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="2dp"
+                android:color="#B8860B"
+                android:dashWidth="3dp"
+                android:dashGap="2dp"/>
+        </shape>
+    </item>
+
+</layer-list>

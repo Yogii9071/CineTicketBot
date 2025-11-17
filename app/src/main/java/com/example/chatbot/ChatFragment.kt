@@ -97,7 +97,10 @@ class ChatFragment : Fragment() {
                         val details = tile.data["details"] as? Map<String, String> ?: emptyMap()
                         showPaymentDialog(price, details)
                     }
-                    TileType.VIEW_TICKET -> showTicketPage()
+                    TileType.VIEW_TICKET -> {
+                        showTicketPage()
+                        openTicketsFragment()  // 🔥 OPEN TICKET PAGE
+                    }
                 }
             },
             onPaymentClicked = { price, details ->
@@ -274,6 +277,14 @@ class ChatFragment : Fragment() {
     private fun simulatePaymentSuccess() {
         addMessageToChat("Bot", "Payment successful! ✅")
         chatAdapter.addSuccessMessage()
+
+        saveTicket(
+            movie = currentMovie ?: "",
+            cinema = currentCinema ?: "",
+            time = currentShowtime ?: "",
+            seats = currentSeats.toString(),
+            price = viewModel.botManager.generateRandomPrice()
+        )
     }
 
     private fun showTicketPage() {
@@ -304,6 +315,28 @@ class ChatFragment : Fragment() {
             }
         }
     }
+    private fun saveTicket(movie: String, cinema: String, time: String, seats: String, price: Int) {
+        val shared = requireContext().getSharedPreferences("tickets_db", 0)
+
+        val json = """
+        {
+            "movie":"$movie",
+            "cinema":"$cinema",
+            "time":"$time",
+            "seats":"$seats",
+            "price":$price
+        }
+    """.trimIndent()
+
+        shared.edit().putString("last_ticket", json).apply()
+    }
+    private fun openTicketsFragment() {
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, TicketsFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
