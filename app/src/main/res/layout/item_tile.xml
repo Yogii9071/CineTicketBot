@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/tileCard"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    app:cardCornerRadius="12dp"
+    app:strokeColor="@color/tile_border"
+    app:strokeWidth="1dp">
+
+    <TextView
+        android:id="@+id/tileText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:textColor="@color/tile_text"
+        android:textSize="14sp"
+        android:drawablePadding="8dp"
+        android:maxLines="1" />
+
+</com.google.android.material.card.MaterialCardView>

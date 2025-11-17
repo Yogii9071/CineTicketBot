@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="90dp"
+    android:viewportWidth="120"
+    android:viewportHeight="90">
+
+    <!-- Filled rounded bubble with tail -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="
+            M20,10
+            h80
+            a10,10 0 0 1 10,10
+            v32
+            a10,10 0 0 1 -10,10
+            h-48
+            l-10,14
+            v-14
+            h-22
+            a10,10 0 0 1 -10,-10
+            v-32
+            a10,10 0 0 1 10,-10
+            z" />
+</vector>

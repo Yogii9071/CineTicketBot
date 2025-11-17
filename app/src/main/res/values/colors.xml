@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Movie Theme Colors -->
+    <color name="background_dark">#1A1A2E</color>
+    <color name="background_light">#0D1B3E</color>
+    <!-- Primary Colors -->
+    <color name="primary_color">#2E3A59</color>
+    <color name="primary_light">#5A678A</color>
+    <color name="primary_dark">#1E2A44</color>
+
+    <!-- Secondary Colors -->
+    <color name="secondary_color">#FF6B35</color>
+    <color name="secondary_light">#FF9B6A</color>
+    <color name="secondary_dark">#C53A08</color>
+
+    <!-- Neutral Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="background_color">#F8F9FA</color>
+    <color name="light_gray">#E9ECEF</color>
+    <color name="gray">#6C757D</color>
+    <color name="dark_gray">#495057</color>
+
+    <!-- Semantic Colors -->
+    <color name="success_color">#28A745</color>
+    <color name="warning_color">#FFC107</color>
+    <color name="error_color">#DC3545</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#212529</color>
+    <color name="text_secondary">#6C757D</color>
+    <color name="text_white">#FFFFFF</color>
+
+    <color name="movie_tile_bg">#E3F2FD</color>
+    <color name="cinema_tile_bg">#F3E5F5</color>
+    <color name="showtime_tile_bg">#E8F5E8</color>
+    <color name="payment_tile_bg">#FFF3E0</color>
+    <color name="success_tile_bg">#E8F5E8</color>
+    <color name="default_tile_bg">#F5F5F5</color>
+    <color name="tile_border">#BDBDBD</color>
+    <color name="tile_text">#212121</color>
+</resources>

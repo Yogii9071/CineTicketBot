@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="800dp"
+    android:viewportWidth="360"
+    android:viewportHeight="800">
+
+    <!-- Red Background -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M0,0 L360,0 L360,800 L0,800 Z" />
+
+    <!-- Soft Material Shadow (below the black curve) -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="
+            M0,220
+            L360,220
+            C280,255 130,190 0,280
+            Z" />
+
+    <!-- Black Curved Top -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="
+            M0,0
+            L360,0
+            L360,220
+            C280,250 130,180 0,270
+            Z" />
+</vector>

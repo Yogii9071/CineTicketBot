@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/bookingDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#F8F9FA"
+        android:padding="16dp"
+        android:textColor="@android:color/black"
+        android:textSize="14sp"
+        android:gravity="center_vertical" />
+
+    <Button
+        android:id="@+id/paymentButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="#3F51B5"
+        android:textColor="@android:color/white"
+        android:text="💳 Make Payment"
+        android:textAllCaps="false" />
+
+</LinearLayout>
