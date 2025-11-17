@@ -106,7 +106,7 @@ class ChatBotManager {
         }
 
     fun getQuickActions(): List<TileItem> =
-        listOf("🎬 Browse Movies", "📍 Change Location", "🎫 My Tickets", "ℹ️ Help").map {
+        listOf("🎬 Browse Movies", "🎫 My Tickets", "ℹ️ Help").map {
             TileItem("qa_${it.hashCode()}", it, TileType.QUICK_ACTION)
         }
 

@@ -77,6 +77,7 @@ dependencies {
 
 
         implementation("com.google.firebase:firebase-analytics")
-
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.2")
+    implementation("androidx.fragment:fragment-ktx:1.7.1")
 
 }

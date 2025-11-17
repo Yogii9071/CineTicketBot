@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.chatbot.databinding.FragmentChatBinding
@@ -23,7 +24,11 @@ class ChatFragment : Fragment() {
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
     private lateinit var chatAdapter: ChatAdapter
-    private lateinit var chatBotManager: ChatBotManager
+
+    // ✅ ViewModel for persistent state
+    private val viewModel: ChatBotViewModel by viewModels()
+    private var greetingShown = false
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     // Current booking state
@@ -44,13 +49,17 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        chatBotManager = ChatBotManager()
+        // ❌ REMOVE THIS (you had this incorrectly)
+        // chatBotManager = ChatBotManager()
+
+        // ✅ Use persistent ChatBotManager from ViewModel
+        val chatBotManager = viewModel.botManager
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         setupChatAdapter()
         setupRecyclerView()
 
-        // Send message on button click
         binding.sendButton.setOnClickListener {
             val userMessage = binding.messageEditText.text.toString().trim()
             if (userMessage.isNotEmpty()) {
@@ -59,7 +68,7 @@ class ChatFragment : Fragment() {
             }
         }
 
-        // Initial greeting
+        // Initial greeting (only shown once per app session)
         showInitialGreeting()
     }
 
@@ -82,17 +91,13 @@ class ChatFragment : Fragment() {
                         addMessageToChat("You", tile.title)
                         askForSeats()
                     }
-                    TileType.QUICK_ACTION -> {
-                        handleQuickAction(tile.title)
-                    }
+                    TileType.QUICK_ACTION -> handleQuickAction(tile.title)
                     TileType.PAYMENT -> {
                         val price = tile.data["price"] as? Int ?: 0
                         val details = tile.data["details"] as? Map<String, String> ?: emptyMap()
                         showPaymentDialog(price, details)
                     }
-                    TileType.VIEW_TICKET -> {
-                        showTicketPage()
-                    }
+                    TileType.VIEW_TICKET -> showTicketPage()
                 }
             },
             onPaymentClicked = { price, details ->
@@ -107,13 +112,21 @@ class ChatFragment : Fragment() {
     }
 
     private fun showInitialGreeting() {
+
+        // 🔥 Prevent duplicate greeting + duplicate tiles
+        if (greetingShown) return
+        greetingShown = true
+
+        val chatBotManager = viewModel.botManager
+
         addMessageToChat("Bot", "Hi! I'm your CineTicketBot assistant. How can I help you today?")
         chatAdapter.addMessageWithTiles("Quick actions:", chatBotManager.getQuickActions())
-        chatAdapter.addMessageWithTiles("Movies now showing:", chatBotManager.getAvailableMovies())
     }
 
+
     private fun processUserMessage(userMessage: String) {
-        // If we're waiting for seat input, process it as seats
+        val chatBotManager = viewModel.botManager
+
         if (waitingForSeats) {
             processSeatInput(userMessage)
             return
@@ -129,16 +142,16 @@ class ChatFragment : Fragment() {
             addMessageToChat("Bot", response.message)
 
             when {
-                response.showMovieTiles -> {
+                response.showMovieTiles ->
                     chatAdapter.addMessageWithTiles("Available movies:", chatBotManager.getAvailableMovies())
-                }
+
                 response.requiresLocation -> {
                     currentMovie = response.movieName
                     requestLocationPermission()
                 }
-                response.showQuickActions -> {
+
+                response.showQuickActions ->
                     chatAdapter.addMessageWithTiles("Quick actions:", chatBotManager.getQuickActions())
-                }
             }
         }
     }
@@ -154,27 +167,21 @@ class ChatFragment : Fragment() {
         } else {
             addMessageToChat("You", userMessage)
             addMessageToChat("Bot", "Please enter a valid number between 1 and 50.")
-            // Stay in waiting for seats mode
         }
     }
 
     private fun askForSeats() {
         waitingForSeats = true
-        addMessageToChat("Bot", "How many seats do you want? (1-50)\n\nPlease type the number in the chat.")
+        addMessageToChat("Bot", "How many seats do you want? (1–50)")
     }
 
     private fun requestLocationPermission() {
-        // Check if we have location permission
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+        if (
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
         ) {
-            // Request both permissions
             requestPermissions(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -183,107 +190,84 @@ class ChatFragment : Fragment() {
                 LOCATION_PERMISSION_REQUEST
             )
         } else {
-            // We already have permission
             getCurrentLocation()
         }
     }
 
     private fun getCurrentLocation() {
-        // Check permission again before accessing location
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+        if (
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
         ) {
-            addMessageToChat("Bot", "Location permission not granted. Please enable location to see cinemas.")
+            addMessageToChat("Bot", "Location permission not granted.")
             return
         }
 
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            if (location != null) {
-                // Use Geocoder to get city name (simplified for now)
-                val city = getCityFromLocation(location)
-                showCinemaTiles(city)
-            } else {
-                // Location is null, use default city
-                showCinemaTiles("Your City")
-            }
-        }.addOnFailureListener { exception ->
-            // Handle location failure
-            addMessageToChat("Bot", "Unable to get location. Using default city.")
+            val city = if (location != null) getCityFromLocation(location) else "Your City"
+            showCinemaTiles(city)
+        }.addOnFailureListener {
+            addMessageToChat("Bot", "Unable to get location.")
             showCinemaTiles("Your City")
         }
     }
 
-    private fun getCityFromLocation(location: Location): String {
-        // For now, return a placeholder
-        // In real implementation, use Geocoder to get actual city name
-        return "Your City"
-
-        /* Real implementation would be:
-        val geocoder = Geocoder(requireContext(), Locale.getDefault())
-        try {
-            val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-            return addresses?.firstOrNull()?.locality ?: "Your City"
-        } catch (e: Exception) {
-            return "Your City"
-        }
-        */
-    }
+    private fun getCityFromLocation(location: Location): String = "Your City"
 
     private fun showCinemaTiles(city: String) {
+        val chatBotManager = viewModel.botManager
         addMessageToChat("Bot", "Here are the cinemas in $city showing $currentMovie:")
         chatAdapter.addMessageWithTiles("Select cinema:", chatBotManager.getCinemasForCity())
     }
 
     private fun showShowtimeTiles() {
+        val chatBotManager = viewModel.botManager
         chatAdapter.addMessageWithTiles("Choose showtime:", chatBotManager.getShowTimes())
     }
 
     private fun processSeatSelection(seats: Int) {
-        val isAvailable = chatBotManager.validateSeatsAvailability(seats)
+        val chatBotManager = viewModel.botManager
 
-        if (isAvailable) {
+        if (chatBotManager.validateSeatsAvailability(seats)) {
             val price = chatBotManager.generateRandomPrice()
-            val bookingDetails = mapOf(
+            val details = mapOf(
                 "movie" to (currentMovie ?: ""),
                 "cinema" to (currentCinema ?: ""),
                 "time" to (currentShowtime ?: ""),
                 "seats" to seats.toString()
             )
-            chatAdapter.addPaymentMessage(price, bookingDetails)
+            chatAdapter.addPaymentMessage(price, details)
         } else {
-            addMessageToChat("Bot", "Sorry, Housefull. Only limited seats available.")
+            addMessageToChat("Bot", "Sorry, Housefull.")
             chatAdapter.addMessageWithTiles("Quick actions:", chatBotManager.getQuickActions())
         }
     }
 
     private fun handleQuickAction(action: String) {
+        val chatBotManager = viewModel.botManager
+
         when {
             action.contains("Movie", ignoreCase = true) -> {
                 addMessageToChat("You", "Show movies")
                 chatAdapter.addMessageWithTiles("Available movies:", chatBotManager.getAvailableMovies())
             }
+
             action.contains("Ticket", ignoreCase = true) -> {
                 addMessageToChat("You", "Show my tickets")
-                // Navigate to tickets fragment
             }
+
             action.contains("Location", ignoreCase = true) -> {
                 addMessageToChat("You", "Change location")
                 requestLocationPermission()
             }
-            else -> {
-                addMessageToChat("You", action)
-            }
+
+            else -> addMessageToChat("You", action)
         }
     }
 
     private fun showPaymentDialog(price: Int, details: Map<String, String>) {
-        // Simulate payment success for now
         simulatePaymentSuccess()
     }
 
@@ -293,10 +277,7 @@ class ChatFragment : Fragment() {
     }
 
     private fun showTicketPage() {
-        // Navigate to TicketPageActivity
-        addMessageToChat("Bot", "Opening your ticket...")
-        // val intent = Intent(requireContext(), TicketPageActivity::class.java)
-        // startActivity(intent)
+        addMessageToChat("Bot", "Opening your ticket…")
     }
 
     private fun addMessageToChat(sender: String, message: String) {
@@ -311,28 +292,25 @@ class ChatFragment : Fragment() {
     ) {
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST -> {
-                // Check if any location permission was granted
-                val locationPermissionGranted = grantResults.isNotEmpty() &&
+                val granted = grantResults.isNotEmpty() &&
                         (grantResults[0] == PackageManager.PERMISSION_GRANTED ||
                                 (grantResults.size > 1 && grantResults[1] == PackageManager.PERMISSION_GRANTED))
 
-                if (locationPermissionGranted) {
-                    getCurrentLocation()
-                } else {
-                    addMessageToChat("Bot", "Location permission denied. Please enable location to see cinemas.")
-                    // Show cinemas with default city anyway
+                if (granted) getCurrentLocation()
+                else {
+                    addMessageToChat("Bot", "Location denied.")
                     showCinemaTiles("Your City")
                 }
             }
         }
     }
 
-    companion object {
-        private const val LOCATION_PERMISSION_REQUEST = 1001
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST = 1001
     }
 }

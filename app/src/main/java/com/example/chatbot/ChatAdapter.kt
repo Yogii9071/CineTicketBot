@@ -107,12 +107,20 @@ class ChatAdapter(
 
     inner class TilesViewHolder(private val binding: ItemTilesContainerBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
         fun bind(tileItems: List<TileItem>) {
+
+            // 🔥 FIX: Create NEW adapter per tile-row instead of reusing the same one
+            val adapter = TilesAdapter { tile ->
+                onTileClick(tile)
+            }
+
             binding.tilesRecyclerView.apply {
                 layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-                adapter = tilesAdapter
+                this.adapter = adapter
             }
-            tilesAdapter.updateTiles(tileItems)
+
+            adapter.updateTiles(tileItems)
         }
     }
 

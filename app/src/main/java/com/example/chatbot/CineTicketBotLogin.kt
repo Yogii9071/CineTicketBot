@@ -20,6 +20,16 @@ class CineTicketBotLogin : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
+        // -----------------------------------------
+        // ✅ AUTO LOGIN (no need to login everytime)
+        // -----------------------------------------
+        if (auth.currentUser != null) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+        // -----------------------------------------
+
         setupClickListeners()
     }
 
