@@ -49,10 +49,6 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // ❌ REMOVE THIS (you had this incorrectly)
-        // chatBotManager = ChatBotManager()
-
-        // ✅ Use persistent ChatBotManager from ViewModel
         val chatBotManager = viewModel.botManager
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
@@ -153,8 +149,6 @@ class ChatFragment : Fragment() {
                     requestLocationPermission()
                 }
 
-                response.showQuickActions ->
-                    chatAdapter.addMessageWithTiles("Quick actions:", chatBotManager.getQuickActions())
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.example.chatbot
 
-import android.util.Log
+
 import com.google.ai.client.generativeai.GenerativeModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,9 +12,8 @@ class ChatBotManager {
         apiKey = BuildConfig.GEMINI_API_KEY
     )
 
-    // Hardcoded movies
     private val moviesNowShowing = listOf(
-        "Pathaan", "Animal", "Jawaan", "Sita Ramam", "Dunki", "Kalki 2898 AD"
+        "Avengers ", "Deadpool", "Jawan", "War 2", "Thamma", "The Taj Story"
     )
 
     private var greeted = false
@@ -23,7 +22,6 @@ class ChatBotManager {
         return try {
             val msg = userMessage.lowercase().trim()
 
-            // ---- FIRST MESSAGE LOGIC ----
             if (!greeted) {
                 greeted = true
                 return BotResponse(
@@ -32,7 +30,6 @@ class ChatBotManager {
                 )
             }
 
-            // ---- MOVIE DETECTION ----
             val movie = detectMovieName(msg)
 
             if (movie != null) {
@@ -41,6 +38,7 @@ class ChatBotManager {
                     movieName = movie,
                     requiresLocation = true
                 )
+
             }
 
             // ---- USER TALKS ABOUT MOVIES BUT NOT VALID ----

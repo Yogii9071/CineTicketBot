@@ -12,15 +12,12 @@ class ChatAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val messages = mutableListOf<ChatMessage>()
-    private val tilesAdapter = TilesAdapter { tile ->
-        onTileClick(tile)
-    }
 
     companion object {
-        private const val TYPE_USER = 0
-        private const val TYPE_BOT = 1
-        private const val TYPE_WITH_TILES = 2
-        private const val TYPE_PAYMENT = 3
+        private const val TYPE_USER = ChatMessage.TYPE_USER
+        private const val TYPE_BOT = ChatMessage.TYPE_BOT
+        private const val TYPE_WITH_TILES = ChatMessage.TYPE_WITH_TILES
+        private const val TYPE_PAYMENT = ChatMessage.TYPE_PAYMENT
     }
 
     fun addMessage(message: ChatMessage) {
@@ -29,28 +26,45 @@ class ChatAdapter(
     }
 
     fun addMessageWithTiles(message: String, tiles: List<TileItem>) {
-        messages.add(ChatMessage("Bot", message, type = TYPE_WITH_TILES, tileItems = tiles))
+        messages.add(
+            ChatMessage(
+                sender = "Bot",
+                message = message,
+                type = TYPE_WITH_TILES,
+                tileItems = tiles
+            )
+        )
         notifyItemInserted(messages.size - 1)
     }
 
     fun addPaymentMessage(price: Int, details: Map<String, String>) {
-        val paymentTile = TileItem(
-            id = "payment_${System.currentTimeMillis()}",
-            title = "💳 Make Payment ₹$price",
-            type = TileType.PAYMENT,
-            data = mapOf("price" to price, "details" to details)
+        messages.add(
+            ChatMessage(
+                sender = "Bot",
+                message = "Please confirm to proceed with payment:",
+                type = TYPE_PAYMENT,
+                price = price,
+                bookingDetails = details
+            )
         )
-        messages.add(ChatMessage("Bot", "Please confirm to proceed with payment:", type = TYPE_PAYMENT, price = price, bookingDetails = details))
         notifyItemInserted(messages.size - 1)
     }
 
     fun addSuccessMessage() {
-        val viewTicketTile = TileItem(
+        val ticketTile = TileItem(
             id = "ticket_${System.currentTimeMillis()}",
             title = "🎟️ View Ticket",
             type = TileType.VIEW_TICKET
         )
-        messages.add(ChatMessage("Bot", "Thank you for your purchase! Your ticket is ready 🎟️", type = TYPE_WITH_TILES, tileItems = listOf(viewTicketTile)))
+
+        messages.add(
+            ChatMessage(
+                sender = "Bot",
+                message = "Thank you for your purchase! Your ticket is ready 🎟️",
+                type = TYPE_WITH_TILES,
+                tileItems = listOf(ticketTile)
+            )
+        )
         notifyItemInserted(messages.size - 1)
     }
 
@@ -59,37 +73,47 @@ class ChatAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+
         return when (viewType) {
-            TYPE_USER -> {
-                val binding = ItemMessageUserBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                UserViewHolder(binding)
-            }
-            TYPE_WITH_TILES -> {
-                val binding = ItemTilesContainerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                TilesViewHolder(binding)
-            }
-            TYPE_PAYMENT -> {
-                val binding = ItemPaymentTileBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                PaymentViewHolder(binding)
-            }
-            else -> {
-                val binding = ItemMessageBotBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                BotViewHolder(binding)
-            }
+
+            TYPE_USER -> UserViewHolder(
+                ItemMessageUserBinding.inflate(inflater, parent, false)
+            )
+
+            TYPE_BOT -> BotViewHolder(
+                ItemMessageBotBinding.inflate(inflater, parent, false)
+            )
+
+            TYPE_WITH_TILES -> TilesViewHolder(
+                ItemTilesContainerBinding.inflate(inflater, parent, false)
+            )
+
+            TYPE_PAYMENT -> PaymentViewHolder(
+                ItemPaymentTileBinding.inflate(inflater, parent, false)
+            )
+
+            else -> BotViewHolder(
+                ItemMessageBotBinding.inflate(inflater, parent, false)
+            )
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val message = messages[position]
+        val msg = messages[position]
+
         when (holder) {
-            is UserViewHolder -> holder.bind(message)
-            is BotViewHolder -> holder.bind(message)
-            is TilesViewHolder -> holder.bind(message.tileItems)
-            is PaymentViewHolder -> holder.bind(message)
+            is UserViewHolder -> holder.bind(msg)
+            is BotViewHolder -> holder.bind(msg)
+            is TilesViewHolder -> holder.bind(msg.tileItems)
+            is PaymentViewHolder -> holder.bind(msg)
         }
     }
 
     override fun getItemCount() = messages.size
+
+
+    // ------------------- ViewHolders ----------------------
 
     inner class UserViewHolder(private val binding: ItemMessageUserBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -109,14 +133,14 @@ class ChatAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(tileItems: List<TileItem>) {
-
-            // 🔥 FIX: Create NEW adapter per tile-row instead of reusing the same one
-            val adapter = TilesAdapter { tile ->
-                onTileClick(tile)
-            }
+            val adapter = TilesAdapter { tile -> onTileClick(tile) }
 
             binding.tilesRecyclerView.apply {
-                layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+                layoutManager = LinearLayoutManager(
+                    binding.root.context,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
                 this.adapter = adapter
             }
 
@@ -128,23 +152,20 @@ class ChatAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(message: ChatMessage) {
-            val details = message.bookingDetails ?: emptyMap()
+            val details = message.bookingDetails
 
-            binding.bookingDetails.text = buildString {
-                appendLine("Movie: ${details["movie"]}")
-                appendLine("Cinema: ${details["cinema"]}")
-                appendLine("Time: ${details["time"]}")
-                appendLine("Seats: ${details["seats"]}")
-                append("Price: ₹${message.price}")
-            }
+            binding.bookingDetails.text = """
+                Movie: ${details["movie"]}
+                Cinema: ${details["cinema"]}
+                Time: ${details["time"]}
+                Seats: ${details["seats"]}
+                Price: ₹${message.price}
+            """.trimIndent()
 
-            binding.paymentButton.text = "💳 Make Payment ₹${message.price ?: 0}"
+            binding.paymentButton.text = "💳 Make Payment ₹${message.price}"
 
             binding.paymentButton.setOnClickListener {
-                val price = message.price
-                if (price != null) {
-                    onPaymentClicked(price, details)
-                }
+                onPaymentClicked(message.price!!, details)
             }
         }
     }

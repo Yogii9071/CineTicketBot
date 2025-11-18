@@ -3,16 +3,16 @@ package com.example.chatbot
 data class ChatMessage(
     val sender: String,
     val message: String,
-    val type: Int = TYPE_TEXT,
+    val type: Int = if (sender == "Bot") TYPE_BOT else TYPE_USER,
     val tileItems: List<TileItem> = emptyList(),
     val movieName: String? = null,
     val price: Int? = null,
     val bookingDetails: Map<String, String> = emptyMap()
 ) {
     companion object {
-        const val TYPE_TEXT = 0
-        const val TYPE_WITH_TILES = 1
-        const val TYPE_SEAT_SELECTION = 2
+        const val TYPE_USER = 0
+        const val TYPE_BOT = 1
+        const val TYPE_WITH_TILES = 2
         const val TYPE_PAYMENT = 3
     }
 }
