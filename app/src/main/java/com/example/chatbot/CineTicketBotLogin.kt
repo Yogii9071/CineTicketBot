@@ -47,6 +47,12 @@ class CineTicketBotLogin : AppCompatActivity() {
             auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
+                        //Email saving
+                        val sharedPref = getSharedPreferences("USER_DATA", MODE_PRIVATE)
+                        sharedPref.edit()
+                            .putString("EMAIL", email)
+                            .apply()
+
                         Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
